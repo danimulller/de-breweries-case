@@ -1,5 +1,6 @@
 import requests
-from datetime import datetime, timezone
+from datetime import datetime
+import pytz
 
 BASE_URL = "https://api.openbrewerydb.org/v1/breweries"
 PER_PAGE = 200  # max allowed by the API
@@ -42,7 +43,7 @@ class BreweryAPI:
             "metadata": {
                 "source": "openbrewerydb",
                 "endpoint": BASE_URL,
-                "ingestion_timestamp": datetime.now(timezone.utc).isoformat(),
+                "ingestion_timestamp": datetime.now(pytz.timezone('America/Sao_Paulo')).isoformat(),
                 "record_count": len(all_breweries),
                 "pages_fetched": page - 1,
             },
@@ -62,7 +63,7 @@ class BreweryAPI:
             "metadata": {
                 "source": "openbrewerydb",
                 "endpoint": url,
-                "ingestion_timestamp": datetime.now(timezone.utc).isoformat(),
+                "ingestion_timestamp": datetime.now(pytz.timezone('America/Sao_Paulo')).isoformat(),
                 "record_count": 1,
             },
         }
