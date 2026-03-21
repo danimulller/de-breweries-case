@@ -24,7 +24,7 @@ def task_save_to_bronze(**context):
 with DAG(
     dag_id="bronze_ingestion",
     start_date=datetime(2026, 3, 20, tzinfo=timezone("America/Sao_Paulo")),
-    schedule='@hourly',
+    schedule=None,
     catchup=False,
     default_args={ "retries": 3, "retry_delay": timedelta(minutes=5) },
     tags=["bronze", "ingestion"],
