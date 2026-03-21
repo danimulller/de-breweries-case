@@ -126,6 +126,10 @@ These checks can be implemented as separate Airflow tasks using `PythonOperator`
 ## 📁 Project Structure
 
 ```
+├── .env.example             # Environment variable template
+├── .env                     # Environment variables (created from .env.example)
+├── .gitignore               # Git ignore rules
+├── conftest.py              # Pytest configuration
 ├── dags/                    # Airflow DAGs
 │   ├── full_pipeline.py     # End-to-end pipeline (scheduled hourly)
 │   ├── bronze_ingestion.py  # Bronze-only DAG
@@ -140,7 +144,8 @@ These checks can be implemented as separate Airflow tasks using `PythonOperator`
 │   └── utils/
 │       ├── minio_client.py  # MinIO connection helper
 │       └── spark_client.py  # PySpark session builder (future use)
-├── .env.example             # Environment variable template
+├── tests/
+│   └── test_silver_writer.py # Unit tests for silver_writer.py
 ├── docker-compose.yml       # Docker services configuration
 ├── Dockerfile               # Container definition
 └── requirements.txt         # Python dependencies
