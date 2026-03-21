@@ -47,6 +47,11 @@ def _read_bronze_json(client, object_name: str) -> pd.DataFrame:
     # Includes updated_at column based on the ingestion timestamp from metadata
     df["updated_at"] = pd.to_datetime(payload["metadata"]["ingestion_timestamp"], errors="coerce")
 
+    string_columns = df.select_dtypes(include=["object"]).columns
+
+    for col in string_columns:
+        df[col] = df[col].str.strip().replace("", None)
+
     return df
 
 
@@ -67,13 +72,19 @@ def _normalize_partitions(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def _remove_special_characters(value: str) -> str:
+def _remove_special_characters(text: str) -> str:
     """
         Normalize unicode to NFD and strip combining characters (accents), so 'Kärnten' becomes 'Karnten'.
     """
 
+    # - Remove leading/trailing whitespace;
+    # - Convert to lowercase;
+    # - Replace spaces with "-"";
+
+    text = text.strip().lower().replace(" ", "-")
+
     # Decompose unicode and drop combining (accent) characters
-    normalized = unicodedata.normalize("NFD", value)
+    normalized = unicodedata.normalize("NFD", text)
     ascii_value = "".join(c for c in normalized if unicodedata.category(c) != "Mn")
 
     # Lowercase, replace anything that isn't alphanumeric or hyphen with underscore
@@ -82,6 +93,7 @@ def _remove_special_characters(value: str) -> str:
     # Collapse multiple underscores
     slug = re.sub(r"_+", "_", slug).strip("_")
 
+    # - Replace empty strings with 'unknown';
     return slug or "unknown"
 
 
@@ -102,7 +114,7 @@ def save_to_silver(object_name: str) -> str:
         client.make_bucket(MINIO_BUCKET_SILVER)
 
     df = _read_bronze_json(client, object_name)
-    df = _normalize_partitions(df)
+    # df = _normalize_partitions(df)
 
     print(f"Rows to write: {len(df)}")
     print(f"Schema: {df.dtypes.to_dict()}")
