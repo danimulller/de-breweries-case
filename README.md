@@ -81,6 +81,24 @@ This solution implements a three-layer medallion architecture:
 - Creates aggregated view grouped by `brewery_type`, `country`, and `state`
 - Saves results to gold layer as Parquet file for the analytics team
 
+## 🧪 Running Tests
+ 
+Tests use `pytest`.
+ 
+```bash
+# Run this commando to enter into the airflow container
+docker exec -it airflow_scheduler bash
+ 
+# Than, run all tests for silver_writer.py function from the project root
+pytest tests/test_silver_writer.py -v
+```
+ 
+### Test Coverage
+ 
+| Module | What's Tested |
+|--------|--------------|
+| `silver_writer.py` | Accent removal, partition name normalization, country/state transformation, Australian state mapping |
+
 ## 🔔 Monitoring & Alerting
 
 ### Pipeline Failure Alerts

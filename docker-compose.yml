@@ -16,6 +16,7 @@ x-airflow-common: &airflow-common
     - ./plugins:/opt/airflow/plugins
     - ./src:/opt/airflow/src
     - ./tests:/opt/airflow/tests
+    - ./conftest.py:/opt/airflow/conftest.py
   depends_on:
     - postgres
   build: .
