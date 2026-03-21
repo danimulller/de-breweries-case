@@ -7,6 +7,7 @@ from io import BytesIO
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import numpy as np
 
 from src.utils.minio_client import MinioClient
 
@@ -54,48 +55,53 @@ def _read_bronze_json(client, object_name: str) -> pd.DataFrame:
 
     return df
 
-
-def _normalize_partitions(df: pd.DataFrame) -> pd.DataFrame:
-    """ Fills null or empty country/state values with 'unknown'. """
-
-    def normalize_column(col):
-
-        # - Remove leading/trailing whitespace;
-        # - Convert to lowercase;
-        # - Replace spaces with "-"";
-        # - Replace empty strings with 'unknown';
-
-        return col.str.strip().str.lower().str.replace(" ", "-").replace("", None).fillna("unknown")
-
-    df["country"] = normalize_column(df["country"])
-    df["state"] = normalize_column(df["state"])
-
-    return df
-
 def _remove_special_characters(text: str) -> str:
     """
         Normalize unicode to NFD and strip combining characters (accents), so 'Kärnten' becomes 'Karnten'.
     """
 
-    # - Remove leading/trailing whitespace;
-    # - Convert to lowercase;
-    # - Replace spaces with "-"";
-
-    text = text.strip().lower().replace(" ", "-")
-
     # Decompose unicode and drop combining (accent) characters
     normalized = unicodedata.normalize("NFD", text)
     ascii_value = "".join(c for c in normalized if unicodedata.category(c) != "Mn")
 
-    # Lowercase, replace anything that isn't alphanumeric or hyphen with underscore
-    slug = re.sub(r"[^\w\-]", "_", ascii_value.lower())
-
-    # Collapse multiple underscores
-    slug = re.sub(r"_+", "_", slug).strip("_")
+    # Replace anything that isn't alphanumeric or hyphen or space with empty string
+    text = re.sub(r"[^\w\- ]", "", ascii_value)
 
     # - Replace empty strings with 'unknown';
-    return slug or "unknown"
+    return text or "unknown"
 
+def _normalize_partition_name(text: str) -> str:
+
+    # - Remove leading/trailing whitespace;
+    # - Convert to lowercase;
+    # - Replace spaces with "-";
+    # - Replace empty strings with 'unknown';
+
+    text = text.strip().lower().replace(" ", "-")
+
+    text = _remove_special_characters(text)
+
+    return text or "unknown"
+
+def _transform_country_state(df: pd.DataFrame) -> pd.DataFrame:
+
+    df["country"] = df["country"].str.strip()
+    df["state"] = df["state"].str.strip().apply(_remove_special_characters)
+
+    australia_state_mapping = {
+        "ACT": "Australian Capital Territory",
+        "NSW": "New South Wales",
+        "NT": "Northern Territory",
+        "QLD": "Queensland",
+        "SA": "South Australia",
+        "TAS": "Tasmania",
+        "VIC": "Victoria",
+        "WA": "Western Australia",
+    }
+
+    df["state"] = np.where(df["country"].str.lower() == "australia", df["state"].str.upper().replace(australia_state_mapping), df["state"])
+
+    return df
 
 def save_to_silver(object_name: str) -> str:
     """
@@ -114,7 +120,7 @@ def save_to_silver(object_name: str) -> str:
         client.make_bucket(MINIO_BUCKET_SILVER)
 
     df = _read_bronze_json(client, object_name)
-    # df = _normalize_partitions(df)
+    df = _transform_country_state(df)
 
     print(f"Rows to write: {len(df)}")
     print(f"Schema: {df.dtypes.to_dict()}")
@@ -130,9 +136,9 @@ def save_to_silver(object_name: str) -> str:
 
         object_name_out = (
             f"{OPENBREWERYDB_API_PREFIX}"
-            f"/country={_remove_special_characters(country)}"
-            f"/state={_remove_special_characters(state)}"
-            f"/data.parquet"
+            f"/country={_normalize_partition_name(country)}"
+            f"/state={_normalize_partition_name(state)}"
+            f"/brewery_list.parquet"
         )
 
         client.put_object(
