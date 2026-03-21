@@ -11,30 +11,29 @@ MINIO_BUCKET_SILVER = os.getenv("MINIO_BUCKET_SILVER")
 MINIO_BUCKET_GOLD = os.getenv("MINIO_BUCKET_GOLD")
 OPENBREWERYDB_API_PREFIX = os.getenv("OPENBREWERYDB_API_PREFIX")
 
-
-def _read_silver_parquets(client) -> pd.DataFrame:
+def read_silver_parquets() -> pd.DataFrame:
     """
     Lists all parquet files under the silver prefix and concatenates them
-    into a single DataFrame. Reads each file directly from MinIO via the
-    Python client — no S3A or Spark required.
+    into a single DataFrame. Raises FileNotFoundError if no files are found.
     """
+    client = MinioClient().get_minio_client()
 
     objects = list(
         client.list_objects(MINIO_BUCKET_SILVER, prefix=OPENBREWERYDB_API_PREFIX, recursive=True)
     )
 
-    parquet_objects = [obj for obj in objects if obj.object_name.endswith(".parquet")]
+    parquet_files = [obj for obj in objects if obj.object_name.endswith(".parquet")]
 
-    if not parquet_objects:
+    if not parquet_files:
         raise FileNotFoundError(
             f"No parquet files found in silver bucket under prefix '{OPENBREWERYDB_API_PREFIX}'."
         )
 
-    print(f"Found {len(parquet_objects)} parquet partitions in silver.")
+    print(f"Found {len(parquet_files)} parquet partitions in silver.")
 
     frames = []
-    for obj in parquet_objects:
-        response = client.get_object(MINIO_BUCKET_SILVER, obj.object_name)
+    for file in parquet_files:
+        response = client.get_object(MINIO_BUCKET_SILVER, file.object_name)
         df = pd.read_parquet(BytesIO(response.read()))
         frames.append(df)
 
@@ -58,24 +57,23 @@ def _aggregate(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def save_to_gold() -> str:
+def save_to_gold(df_silver: pd.DataFrame) -> str:
     """
-    Reads all silver parquet partitions, computes the aggregated view, and
-    writes a single parquet file to the gold bucket.
+    Receives the silver DataFrame, computes the aggregated view, and writes
+    a single parquet file to the gold bucket.
 
     Returns:
         The MinIO object name where the gold data was written.
     """
-
     client = MinioClient().get_minio_client()
 
     if not client.bucket_exists(MINIO_BUCKET_GOLD):
         client.make_bucket(MINIO_BUCKET_GOLD)
 
-    df_silver = _read_silver_parquets(client)
     print(f"Total silver rows loaded: {len(df_silver)}")
 
     df_gold = _aggregate(df_silver)
+    
     print(f"Gold rows after aggregation: {len(df_gold)}")
     print(df_gold.head(10).to_string(index=False))
 
@@ -97,5 +95,5 @@ def save_to_gold() -> str:
     )
 
     print(f"Gold write complete: s3://{MINIO_BUCKET_GOLD}/{object_name}")
-    
+
     return object_name
