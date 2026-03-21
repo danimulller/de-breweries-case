@@ -48,6 +48,15 @@ This solution implements a three-layer medallion architecture:
    - **Airflow**: http://localhost:8080 (user: `admin`, password: `admin`)
      > Note: Airflow may take longer to start than MinIO
 
+5. **Shutting Down the Environment**
+   To stop all services and clean up resources after use:
+
+    ```bash
+    docker compose down
+    ```
+
+    This will stop and remove all containers, networks, and volumes created by the services.
+
 ## 📊 Running the Pipeline
 
 1. Access Airflow at http://localhost:8080
@@ -75,7 +84,7 @@ This solution implements a three-layer medallion architecture:
 ## 🔔 Monitoring & Alerting
 
 ### Pipeline Failure Alerts
-Airflow's built-in `on_failure_callback` can be used to send notifications via email or Slack whenever a task fails. All DAGs already have `retries: 3` with a 5-minute `retry_delay` configured, which handles transient failures (API timeouts, network blips) automatically.
+Airflow's built-in `on_failure_callback` can be used to send notifications via email whenever a task fails. All DAGs already have `retries: 3` with a 5-minute `retry_delay` configured, which handles transient failures (API timeouts, network blips) automatically.
 
 ### Data Quality Checks
 Key checks to add between pipeline stages:
