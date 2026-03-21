@@ -6,7 +6,7 @@ from io import BytesIO
 from src.utils.minio_client import MinioClient
 
 MINIO_BUCKET_BRONZE = os.getenv("MINIO_BUCKET_BRONZE")
-BRONZE_PREFIX = "openbrewerydb"
+OPENBREWERYDB_API_PREFIX = os.getenv("OPENBREWERYDB_API_PREFIX")
 
 def save_to_bronze(payload: dict) -> str:
 
@@ -20,7 +20,7 @@ def save_to_bronze(payload: dict) -> str:
     partition_date = now.strftime("%Y-%m-%d")
     file_name = f"breweries_{now.strftime('%Y%m%d_%H%M%S')}.json"
 
-    object_name = f"{BRONZE_PREFIX}/extraction_date={partition_date}/{file_name}"
+    object_name = f"{OPENBREWERYDB_API_PREFIX}/extraction_date={partition_date}/{file_name}"
 
     data_bytes = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 

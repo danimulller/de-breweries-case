@@ -7,18 +7,18 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 from pendulum import timezone
 
-from src.ingestion.bronze_pipeline import run_bronze_pipeline
+from src.ingestion.silver_pipeline import run_silver_pipeline
 
 with DAG(
-    dag_id="bronze_ingestion",
+    dag_id="silver_ingestion",
     start_date=datetime(2026, 3, 20, tzinfo=timezone("America/Sao_Paulo")),
-    schedule='@hourly',
+    schedule="@hourly",
     catchup=False,
     default_args={ "retries": 3, "retry_delay": timedelta(minutes=5) },
-    tags=["bronze", "ingestion"],
+    tags=["silver", "ingestion"],
 ) as dag:
 
     task_1 = PythonOperator(
-        task_id="fetch_api_and_save_to_bronze",
-        python_callable=run_bronze_pipeline
+        task_id="transform_bronze_to_silver",
+        python_callable=run_silver_pipeline,
     )
