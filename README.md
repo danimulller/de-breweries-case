@@ -86,10 +86,10 @@ This solution implements a three-layer medallion architecture:
 Tests use `pytest`.
  
 ```bash
-# Run this commando to enter into the airflow container
+# Run this command to enter into the airflow container
 docker exec -it airflow_scheduler bash
  
-# Than, run all tests for silver_writer.py function from the project root
+# Then, run all tests for silver_writer.py function from the project root
 pytest tests/test_silver_writer.py -v
 ```
  
