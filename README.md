@@ -45,8 +45,13 @@ This solution implements a three-layer medallion architecture:
 
 4. **Verify services are running**
    - **MinIO**: http://localhost:9001 (user: `minio`, password: `minio123`)
+    
+    ![MinIO Interface](images/minio.png)
+
    - **Airflow**: http://localhost:8080 (user: `admin`, password: `admin`)
      > Note: Airflow may take longer to start than MinIO
+
+    ![Airflow Interface](images/airflow.png)
 
 5. **Shutting Down the Environment**
    To stop all services and clean up resources after use:
@@ -84,7 +89,7 @@ This solution implements a three-layer medallion architecture:
 ## 🧪 Running Tests
  
 Tests use `pytest`.
- 
+
 ```bash
 # Run this command to enter into the airflow container
 docker exec -it airflow_scheduler bash
@@ -98,6 +103,8 @@ pytest tests/test_silver_writer.py -v
 | Module | What's Tested |
 |--------|--------------|
 | `silver_writer.py` | Accent removal, partition name normalization, country/state transformation, Australian state mapping |
+
+![Pytest Execution](images/pytest.png)
 
 ## 🔔 Monitoring & Alerting
 
