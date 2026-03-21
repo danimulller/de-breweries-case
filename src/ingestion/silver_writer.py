@@ -15,6 +15,20 @@ MINIO_BUCKET_BRONZE = os.getenv("MINIO_BUCKET_BRONZE")
 MINIO_BUCKET_SILVER = os.getenv("MINIO_BUCKET_SILVER")
 OPENBREWERYDB_API_PREFIX = os.getenv("OPENBREWERYDB_API_PREFIX")
 
+def get_australia_state_mapping() -> dict:
+    """ Returns a mapping of Australian state names to their standard abbreviations. """
+    
+    return {
+        "ACT": "Australian Capital Territory",
+        "NSW": "New South Wales",
+        "NT": "Northern Territory",
+        "QLD": "Queensland",
+        "SA": "South Australia",
+        "TAS": "Tasmania",
+        "VIC": "Victoria",
+        "WA": "Western Australia"
+    }
+
 
 def get_latest_bronze_object() -> str:
     """Returns the most recent bronze object path, sorted by last_modified."""
@@ -88,18 +102,7 @@ def _transform_country_state(df: pd.DataFrame) -> pd.DataFrame:
     df["country"] = df["country"].str.strip()
     df["state"] = df["state"].str.strip().apply(_remove_special_characters)
 
-    australia_state_mapping = {
-        "ACT": "Australian Capital Territory",
-        "NSW": "New South Wales",
-        "NT": "Northern Territory",
-        "QLD": "Queensland",
-        "SA": "South Australia",
-        "TAS": "Tasmania",
-        "VIC": "Victoria",
-        "WA": "Western Australia",
-    }
-
-    df["state"] = np.where(df["country"].str.lower() == "australia", df["state"].str.upper().replace(australia_state_mapping), df["state"])
+    df["state"] = np.where(df["country"].str.lower() == "australia", df["state"].str.upper().replace(get_australia_state_mapping()), df["state"])
 
     return df
 
