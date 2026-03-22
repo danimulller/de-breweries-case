@@ -54,12 +54,12 @@ This solution implements a three-layer medallion architecture:
 
     ![Airflow Interface](images/airflow.png)
 
-5. **Shutting Down the Environment**
+5. **Shutting Down the Environment** (only after finished!)
     ```bash
     docker compose down
     ```
 
-    This will stop and remove all containers, networks, and volumes created by the services.
+    ⚠️ This will stop and remove all containers, networks, and volumes created by the services.
 
 ## 📊 Running the Pipeline
 
