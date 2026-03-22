@@ -11,17 +11,18 @@ This solution implements a three-layer medallion architecture:
 
 ## 🛠️ Technologies Used
 
-- **Orchestration**: Apache Airflow 2.9.3
+- **Orchestration**: Apache Airflow
 - **Storage**: MinIO (S3-compatible object storage)
 - **Data Processing**: Pandas, NumPy, PyArrow
 - **Containerization**: Docker & Docker Compose
+- **Testing**: Pytest
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Docker or Docker Desktop ([download here](https://www.docker.com/products/docker-desktop/))
-- At least 16 GB RAM recommended
+- 16 GB RAM (recommended)
 
 ### Setup
 
@@ -54,8 +55,6 @@ This solution implements a three-layer medallion architecture:
     ![Airflow Interface](images/airflow.png)
 
 5. **Shutting Down the Environment**
-   To stop all services and clean up resources after use:
-
     ```bash
     docker compose down
     ```
@@ -118,7 +117,7 @@ Key checks to add between pipeline stages:
 - **Silver → Gold**: Assert no duplicate `id` values exist after transformation. Assert `country` and `state` are never both null for the same row.
 - **Gold**: Assert `brewery_count` is always greater than zero. Assert the total count in gold matches the total in silver.
 
-These checks can be implemented as separate Airflow tasks using `PythonOperator` with explicit assertions, or with a library like [Great Expectations](https://greatexpectations.io/) for more comprehensive data profiling.
+These checks can be implemented as separate Airflow tasks using `PythonOperator` with explicit assertions, or with a library like [Great Expectations](https://greatexpectations.io/) or [PyDeequ](https://github.com/awslabs/python-deequ) for more comprehensive data profiling.
 
 ## 🤔 Trade-Offs and Decisions
 
@@ -133,27 +132,29 @@ These checks can be implemented as separate Airflow tasks using `PythonOperator`
 ## 📁 Project Structure
 
 ```
-├── .env.example             # Environment variable template
-├── .env                     # Environment variables (created from .env.example)
-├── .gitignore               # Git ignore rules
-├── conftest.py              # Pytest configuration
-├── dags/                    # Airflow DAGs
-│   ├── full_pipeline.py     # End-to-end pipeline (scheduled hourly)
-│   ├── bronze_ingestion.py  # Bronze-only DAG
-│   ├── silver_ingestion.py  # Silver-only DAG
-│   └── gold_ingestion.py    # Gold-only DAG
+├── .env.example              # Environment variable template
+├── .env                      # Environment variables (created from .env.example)
+├── .gitignore                # Git ignore rules
+├── conftest.py               # Pytest configuration
+├── dags/                     # Airflow DAGs
+│   ├── full_pipeline.py      # End-to-end pipeline (scheduled hourly)
+│   ├── bronze_ingestion.py   # Bronze-only DAG
+│   ├── silver_ingestion.py   # Silver-only DAG
+│   └── gold_ingestion.py     # Gold-only DAG
 ├── src/
 │   ├── ingestion/
-│   │   ├── brewery_api.py   # Open Brewery DB API client
-│   │   ├── bronze_writer.py # Raw JSON → MinIO bronze
-│   │   ├── silver_writer.py # JSON → partitioned Parquet (silver)
-│   │   └── gold_writer.py   # Parquet → aggregated Parquet (gold)
+│   │   ├── brewery_api.py    # Open Brewery DB API client
+│   │   ├── bronze_writer.py  # Raw JSON → MinIO bronze
+│   │   ├── silver_writer.py  # JSON → partitioned Parquet (silver)
+│   │   └── gold_writer.py    # Parquet → aggregated Parquet (gold)
 │   └── utils/
-│       ├── minio_client.py  # MinIO connection helper
-│       └── spark_client.py  # PySpark session builder (future use)
+│       ├── minio_client.py   # MinIO connection helper
+│       └── spark_client.py   # PySpark session builder (future use)
 ├── tests/
 │   └── test_silver_writer.py # Unit tests for silver_writer.py
-├── docker-compose.yml       # Docker services configuration
-├── Dockerfile               # Container definition
-└── requirements.txt         # Python dependencies
+├── images/                   # Screenshots and diagrams
+├── logs/                     # Airflow logs
+├── docker-compose.yml        # Docker services configuration
+├── Dockerfile                # Container definition
+└── requirements.txt          # Python dependencies
 ```
