@@ -144,7 +144,7 @@ These checks can be implemented as separate Airflow tasks using `PythonOperator`
 ├── src/
 │   ├── ingestion/
 │   │   ├── brewery_api.py    # Open Brewery DB API client
-│   │   ├── bronze_writer.py  # Raw JSON → MinIO bronze
+│   │   ├── bronze_writer.py  # Raw JSON → MinIO (bronze)
 │   │   ├── silver_writer.py  # JSON → partitioned Parquet (silver)
 │   │   └── gold_writer.py    # Parquet → aggregated Parquet (gold)
 │   └── utils/
